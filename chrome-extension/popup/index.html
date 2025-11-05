@@ -1,12 +1,43 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Mood Music Player</title>
-      <script type="module" crossorigin src="./popup.js"></script>
-      <link rel="stylesheet" crossorigin href="./assets/index-BODvQYYc.css">
-    </head>
-  <body>
-    <div id="root"></div> 
-  </body>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Mood Player</title>
+  <style>
+    body {
+      width: 250px;
+      font-family: sans-serif;
+      text-align: center;
+      padding: 10px;
+    }
+    input {
+      width: 80%;
+      padding: 6px;
+      margin: 8px 0;
+      border-radius: 6px;
+      border: 1px solid #aaa;
+    }
+    button {
+      width: 45%;
+      margin: 4px;
+      padding: 6px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+    }
+    #start-btn { background-color: #4CAF50; color: white; }
+    #stop-btn { background-color: #f44336; color: white; }
+  </style>
+</head>
+<body>
+  <h3>🎵 Hourly Music Scheduler</h3>
+  <input id="minute" type="number" min="0" max="59" placeholder="Minute of hour (0-59)" />
+  <div>
+    <button id="start-btn">Start</button>
+    <button id="stop-btn">Stop</button>
+  </div>
+  <p id="status"></p>
+
+  <script src="popup.js"></script>
+</body>
 </html>

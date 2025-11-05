@@ -1,5 +1,3 @@
-// music-api-server/server.js
-
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
@@ -32,32 +30,11 @@ app.use(cors());
 
 // Endpoint to get a random song based on topic
 app.get('/api/music', (req, res) => {
-    const topic = req.query.topic;
+    const randomIndex = Math.floor(Math.random() * musicCatalog.length);
+    const selectedSong = musicCatalog[randomIndex];
+    console.log(`\nTesting Example: http://localhost:${PORT}/api/music`);
 
-    if (!topic) {
-        return res.status(400).json({ error: 'Topic query parameter is required.' });
-    }
-
-    // Filter songs by the requested topic (case-insensitive)
-    const filteredSongs = musicCatalog.filter(song => 
-        song.topics.some(t => t.toLowerCase() === topic.toLowerCase())
-    );
-
-    if (filteredSongs.length === 0) {
-        return res.status(404).json({ error: `No music found for topic: ${topic}` });
-    }
-
-    // Select a random song
-    const randomIndex = Math.floor(Math.random() * filteredSongs.length);
-    const selectedSong = filteredSongs[randomIndex];
-
-    // Return the required data to the extension
-    res.json({
-        title: selectedSong.title,
-        artist: selectedSong.artist,
-        music_url: selectedSong.music_url,
-        image_query: selectedSong.image_query
-    });
+    res.json(selectedSong);
 });
 
 // ----------------------------------------------------
@@ -66,5 +43,5 @@ app.get('/api/music', (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`\n🎉 Music API Server running on http://localhost:${PORT}`);
-    console.log(`\nTesting Example: http://localhost:${PORT}/api/music?topic=Lofi`);
+    console.log(`\nTesting Example: http://localhost:${PORT}/api/music`);
 });

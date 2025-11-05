@@ -1,41 +1,40 @@
-// chrome-extension/offscreen.js
-
 const player = document.getElementById('music-player');
 
-// ----------------------------------------------------
-// Message Listener: Handles commands from the Service Worker
-// ----------------------------------------------------
 chrome.runtime.onMessage.addListener(async (message) => {
     if (message.target !== 'offscreen') {
-        return; // Ignore messages not meant for the offscreen document
+        return; 
     }
-
+    if (!player) {
+        console.error("music-player element not found!");
+        return;
+    }
     if (message.action === 'play') {
-        player.src = message.url;
+        if (player) { 
+            player.src = message.url;
+        }
+            console.log('message', message.url);
+
         try {
-            await player.play();
+            if (player) {
+                await player.play();
+            }
             console.log('Audio playback started for:', message.url);
         } catch (error) {
-            console.error('Playback failed:', error);
+            console.error('Playback failed:', JSON.stringify(error));
         }
     } else if (message.action === 'stop') {
-        player.pause();
-        player.currentTime = 0; // Rewind
-        player.src = '';         // Clear source
-        console.log('Audio playback stopped.');
+        if (player) {
+            player.pause();
+            player.currentTime = 0;
+            player.src = '';
+            console.log('Audio playback stopped.');
+        }
     }
 });
-
-// Optional: Auto-play next song (looping feature)
 player.addEventListener('ended', async () => {
     console.log('Song ended. Requesting next song...');
     
-    // Notify the service worker to fetch and play the next random track
     chrome.runtime.sendMessage({ 
-        action: 'song-ended', 
-        target: 'service-worker' 
+        action: 'song-ended'
     });
 });
-
-// Optional: Loop a single song if needed for testing (comment out when done)
-// player.loop = true;

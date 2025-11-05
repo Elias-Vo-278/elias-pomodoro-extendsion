@@ -1,91 +1,89 @@
-// chrome-extension/service-worker.js
-
 const OFFSCREEN_PATH = 'offscreen.html';
 const BACKEND_API = 'http://localhost:3000/api/music';
 
-let currentTopic = ''; // State to store the last played topic
+let scheduleTimer = null;
+let scheduledMinute = null;
 
-// ----------------------------------------------------
-// Offscreen Document Management
-// ----------------------------------------------------
-
-// Utility function to check and create the offscreen document
 async function setupOffscreenDocument(path) {
-    const contexts = await chrome.runtime.getContexts({
-        contextTypes: ['OFFSCREEN_DOCUMENT']
-    });
+  const contexts = await chrome.runtime.getContexts({
+    contextTypes: ['OFFSCREEN_DOCUMENT']
+  });
+  if (contexts.length > 0) return;
 
-    if (contexts.length > 0) return; // Document is already open
-
-    await chrome.offscreen.createDocument({
-        url: path,
-        reasons: ['AUDIO_PLAYBACK'],
-        justification: 'To play persistent background music'
-    });
+  await chrome.offscreen.createDocument({
+    url: path,
+    reasons: ['AUDIO_PLAYBACK'],
+    justification: 'Play background music at intervals.'
+  });
 }
 
-// ----------------------------------------------------
-// API and Playback Logic
-// ----------------------------------------------------
+async function fetchAndPlayRandomMusic() {
+  await setupOffscreenDocument(OFFSCREEN_PATH);
 
-async function fetchAndPlayMusic(topic) {
-    currentTopic = topic;
-    await setupOffscreenDocument(OFFSCREEN_PATH);
+  try {
+    const response = await fetch(`${BACKEND_API}`);
+    const song = await response.json();
 
-    try {
-        // 1. Fetch data from your backend API
-        const response = await fetch(`${BACKEND_API}?topic=${topic}`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        
-        const { title, artist, music_url, image_query } = data;
+    chrome.runtime.sendMessage({
+      action: 'play',
+      target: 'offscreen',
+      url: song.url
+    });
 
-        // 2. Save current state to storage for the popup/content script to read
-        await chrome.storage.local.set({ 
-            isPlaying: true,
-            currentSong: { title, artist, topic, image_query },
-            musicUrl: music_url
-        });
-        
-        // 3. Send the music URL to the offscreen document to start playing
-        chrome.runtime.sendMessage({
-            action: 'play',
-            target: 'offscreen',
-            url: music_url
-        });
+    await chrome.storage.local.set({
+      isPlaying: true,
+      currentSong: song
+    });
 
-        console.log(`Now playing: ${title} by ${artist} (Topic: ${topic})`);
-        
-    } catch (error) {
-        console.error('Failed to fetch and play music:', error);
-        // Clean up or send error message to popup
-    }
+    console.log(`Now playing: ${song.title}`);
+  } catch (error) {
+    console.error('Error fetching music:', error);
+  }
 }
 
-// ----------------------------------------------------
-// Service Worker Listener
-// ----------------------------------------------------
+chrome.runtime.onMessage.addListener((message) => {
+  if (message.action === 'start-schedule') {
+    scheduledMinute = message.minute;
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    // Command from the Popup to start/change music
-    if (message.action === 'play-topic') {
-        fetchAndPlayMusic(message.topic);
-    } 
-    // Command from the Popup to stop music
-    else if (message.action === 'stop-music') {
-        // 1. Send stop message to offscreen document
-        chrome.runtime.sendMessage({
-            action: 'stop',
-            target: 'offscreen'
-        });
-        // 2. Clear state
-        chrome.storage.local.set({ isPlaying: false, currentSong: null });
+    if (scheduleTimer) clearTimeout(scheduleTimer);
+
+    function scheduleNextPlayback() {
+      const now = new Date();
+      let next = new Date(now.getTime());
+      next.setSeconds(0);
+      next.setMilliseconds(0);
+      if (now.getMinutes() < scheduledMinute) {
+        next.setMinutes(scheduledMinute);
+      } else {
+        next.setHours(next.getHours() + 1);
+        next.setMinutes(scheduledMinute);
+      }
+      const delay = next.getTime() - now.getTime();
+
+      scheduleTimer = setTimeout(async () => {
+        await fetchAndPlayRandomMusic();
+        scheduleNextPlayback();
+      }, delay);
     }
-    // Command from the offscreen document when a song ends
-    else if (message.action === 'song-ended' && currentTopic) {
-        // Automatically play the next song in the same topic
-        fetchAndPlayMusic(currentTopic);
+
+    scheduleNextPlayback();
+
+    chrome.storage.local.set({ isPlaying: true, scheduledMinute });
+    console.log(`Scheduled playback at minute ${scheduledMinute} of each hour.`);
+  }
+
+  if (message.action === 'stop-schedule') {
+    if (scheduleTimer) {
+      clearTimeout(scheduleTimer);
+      scheduleTimer = null;
     }
+
+    chrome.runtime.sendMessage({ action: 'stop', target: 'offscreen' });
+    chrome.storage.local.set({ isPlaying: false });
+    console.log('Music stopped by user.');
+  }
+
+  if (message.action === 'song-ended') {
+    console.log('Song ended, waiting for next interval...');
+  }
 });
