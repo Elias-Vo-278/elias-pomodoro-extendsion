@@ -1,42 +1,516 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Mood Player</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mood Player - Báo Thức Nhạc</title>
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
-      width: 250px;
-      font-family: sans-serif;
+      width: 420px;
+      min-height: 600px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      padding: 0;
+    }
+
+    .container {
+      background: white;
+      border-radius: 0;
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
       text-align: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .header h1 {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .header p {
+      font-size: 13px;
+      opacity: 0.9;
+    }
+
+    .content {
+      padding: 20px;
+    }
+
+    .section {
+      margin-bottom: 25px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title::before {
+      content: '';
+      width: 4px;
+      height: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 2px;
+    }
+
+    /* Pattern Selector */
+    .pattern-selector {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+
+    .pattern-btn {
       padding: 10px;
-    }
-    input {
-      width: 80%;
-      padding: 6px;
-      margin: 8px 0;
-      border-radius: 6px;
-      border: 1px solid #aaa;
-    }
-    button {
-      width: 45%;
-      margin: 4px;
-      padding: 6px;
+      border: 2px solid #e0e0e0;
       border-radius: 8px;
-      border: none;
+      background: white;
       cursor: pointer;
+      transition: all 0.3s;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
     }
-    #start-btn { background-color: #4CAF50; color: white; }
-    #stop-btn { background-color: #f44336; color: white; }
+
+    .pattern-btn:hover {
+      border-color: #667eea;
+      background: #f8f9fa;
+    }
+
+    .pattern-btn.active {
+      border-color: #667eea;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    /* Pattern Settings */
+    .pattern-settings {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      display: none;
+    }
+
+    .pattern-settings.active {
+      display: block;
+    }
+
+    .setting-group {
+      margin-bottom: 12px;
+    }
+
+    .setting-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .setting-label {
+      font-size: 13px;
+      color: #34495e;
+      margin-bottom: 6px;
+      display: block;
+      font-weight: 500;
+    }
+
+    .setting-input-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .setting-input {
+      flex: 1;
+      padding: 10px;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+
+    .setting-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .time-input-group {
+      display: flex;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .time-input {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      text-align: center;
+      transition: all 0.3s;
+      background: #f8f9fa;
+    }
+
+    .time-input:focus {
+      outline: none;
+      border-color: #667eea;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .alarm-form {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-danger {
+      background: #e74c3c;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #c0392b;
+    }
+
+    .btn-warning {
+      background: #f39c12;
+      color: white;
+    }
+
+    .btn-warning {
+      background: #f39c12;
+      color: white;
+    }
+
+    .btn-warning:hover {
+      background: #e67e22;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .btn-secondary {
+      background: #95a5a6;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #7f8c8d;
+    }
+
+    .alarms-list {
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    .alarm-item {
+      background: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 8px;
+      transition: all 0.3s;
+    }
+
+    .alarm-item:hover {
+      background: #f0f0f0;
+      border-color: #667eea;
+    }
+
+    .alarm-item.active {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+      border-color: #667eea;
+    }
+
+    .alarm-item.playing {
+      background: linear-gradient(135deg, rgba(39, 174, 96, 0.15) 0%, rgba(46, 213, 115, 0.15) 100%);
+      border-color: #27ae60;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+    }
+
+    .alarm-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .alarm-time {
+      font-size: 18px;
+      font-weight: 700;
+      color: #2c3e50;
+    }
+
+    .alarm-info {
+      font-size: 11px;
+      color: #95a5a6;
+      margin-top: 4px;
+    }
+
+    .alarm-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .btn-small {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    .pattern-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      margin-left: 8px;
+      background: #667eea;
+      color: white;
+    }
+
+    .status-box {
+      background: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 15px;
+      text-align: center;
+    }
+
+    .status-text {
+      color: #34495e;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .status-text.active {
+      color: #27ae60;
+      font-weight: 600;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 30px 20px;
+      color: #95a5a6;
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+
+    .empty-state-text {
+      font-size: 14px;
+    }
+
+    .quick-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .quick-actions .btn {
+      flex: 1;
+    }
+
+    /* Scrollbar styling */
+    .alarms-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .alarms-list::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 3px;
+    }
+
+    .alarms-list::-webkit-scrollbar-thumb {
+      background: #667eea;
+      border-radius: 3px;
+    }
+
+    .alarms-list::-webkit-scrollbar-thumb:hover {
+      background: #764ba2;
+    }
   </style>
 </head>
 <body>
-  <h3>🎵 Hourly Music Scheduler</h3>
-  <input id="minute" type="number" min="0" max="59" placeholder="Minute of hour (0-59)" />
-  <div>
-    <button id="start-btn">Start</button>
-    <button id="stop-btn">Stop</button>
+  <div class="container">
+    <div class="header">
+      <h1>🎵 Báo Thức Nhạc</h1>
+      <p>Quản lý thời gian làm việc hiệu quả</p>
+    </div>
+
+    <div class="content">
+      <!-- Pattern Selector -->
+      <div class="section">
+        <div class="section-title">Chọn Kiểu Báo Thức</div>
+        <div class="pattern-selector">
+          <button class="pattern-btn" data-pattern="onetime">⏰ Một Lần</button>
+          <button class="pattern-btn" data-pattern="pomodoro">🍅 Pomodoro</button>
+          <button class="pattern-btn" data-pattern="interval">🔄 Lặp Lại</button>
+          <button class="pattern-btn" data-pattern="daily">📅 Hàng Ngày</button>
+        </div>
+
+        <!-- Pattern Settings -->
+        <div id="onetime-settings" class="pattern-settings">
+          <div class="setting-group">
+            <label class="setting-label">Thời Gian</label>
+            <div class="time-input-group">
+              <input type="number" id="onetime-hour" class="time-input" min="0" max="23" placeholder="Giờ" value="08">
+              <span style="align-self: center; font-size: 18px; font-weight: 600; color: #667eea;">:</span>
+              <input type="number" id="onetime-minute" class="time-input" min="0" max="59" placeholder="Phút" value="00">
+            </div>
+          </div>
+        </div>
+
+        <div id="pomodoro-settings" class="pattern-settings">
+          <div class="setting-group">
+            <label class="setting-label">Thời Gian Làm Việc (phút)</label>
+            <input type="number" id="pomodoro-work" class="setting-input" min="1" max="120" value="25">
+          </div>
+          <div class="setting-group">
+            <label class="setting-label">Thời Gian Nghỉ (phút)</label>
+            <input type="number" id="pomodoro-break" class="setting-input" min="1" max="60" value="5">
+          </div>
+          <div class="setting-group">
+            <label class="setting-label">Bắt Đầu Từ</label>
+            <div class="time-input-group">
+              <input type="number" id="pomodoro-start-hour" class="time-input" min="0" max="23" placeholder="Giờ" value="09">
+              <span style="align-self: center; font-size: 18px; font-weight: 600; color: #667eea;">:</span>
+              <input type="number" id="pomodoro-start-minute" class="time-input" min="0" max="59" placeholder="Phút" value="00">
+            </div>
+          </div>
+        </div>
+
+        <div id="interval-settings" class="pattern-settings">
+          <div class="setting-group">
+            <label class="setting-label">Lặp Lại Mỗi (phút)</label>
+            <input type="number" id="interval-minutes" class="setting-input" min="1" max="1440" value="30">
+          </div>
+          <div class="setting-group">
+            <label class="setting-label">Bắt Đầu Từ</label>
+            <div class="time-input-group">
+              <input type="number" id="interval-start-hour" class="time-input" min="0" max="23" placeholder="Giờ" value="09">
+              <span style="align-self: center; font-size: 18px; font-weight: 600; color: #667eea;">:</span>
+              <input type="number" id="interval-start-minute" class="time-input" min="0" max="59" placeholder="Phút" value="00">
+            </div>
+          </div>
+        </div>
+
+        <div id="daily-settings" class="pattern-settings">
+          <div class="setting-group">
+            <label class="setting-label">Thêm Thời Điểm</label>
+            <div class="time-input-group" style="margin-bottom: 8px;">
+              <input type="number" id="daily-hour" class="time-input" min="0" max="23" placeholder="Giờ" value="09">
+              <span style="align-self: center; font-size: 18px; font-weight: 600; color: #667eea;">:</span>
+              <input type="number" id="daily-minute" class="time-input" min="0" max="59" placeholder="Phút" value="00">
+            </div>
+            <button id="add-daily-time-btn" class="btn btn-primary btn-small" style="width: 100%;">
+              <span>➕</span>
+              <span>Thêm Thời Điểm</span>
+            </button>
+          </div>
+          <div class="setting-group">
+            <label class="setting-label">Các Thời Điểm Đã Thêm</label>
+            <div id="daily-times-list" style="min-height: 40px; padding: 8px; background: white; border-radius: 6px; border: 1px solid #e0e0e0;">
+              <div style="color: #95a5a6; font-size: 12px; text-align: center;">Chưa có thời điểm nào</div>
+            </div>
+          </div>
+        </div>
+
+        <button id="add-alarm-btn" class="btn btn-primary" style="width: 100%; margin-top: 15px;">
+          <span>➕</span>
+          <span>Thêm Báo Thức</span>
+        </button>
+      </div>
+
+      <!-- Danh sách báo thức -->
+      <div class="section">
+        <div class="section-title">Báo Thức Đã Đặt</div>
+        <div id="alarms-list" class="alarms-list">
+          <div class="empty-state">
+            <div class="empty-state-icon">⏰</div>
+            <div class="empty-state-text">Chưa có báo thức nào</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trạng thái -->
+      <div class="status-box">
+        <div id="status-text" class="status-text">Sẵn sàng</div>
+      </div>
+
+      <!-- Các nút điều khiển -->
+      <div class="quick-actions">
+        <button id="test-alarm-btn" class="btn btn-warning btn-small">
+          <span>🔊</span>
+          <span>Kiểm Tra Phát Nhạc</span>
+        </button>
+        <button id="stop-all-btn" class="btn btn-danger btn-small">
+          <span>⏹️</span>
+          <span>Dừng Tất Cả</span>
+        </button>
+      </div>
+    </div>
   </div>
-  <p id="status"></p>
 
   <script src="popup.js"></script>
 </body>

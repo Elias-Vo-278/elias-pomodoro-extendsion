@@ -4,8 +4,9 @@
   "version": "1.0",
   "description": "Background music based on your current mood or topic.",
   "permissions": [
-    "storage",          
-    "offscreen"        
+    "storage",
+    "offscreen",
+    "tabs"
   ],
   "host_permissions": [
     "http://localhost:3000/*"
@@ -16,5 +17,12 @@
   },
   "background": {
     "service_worker": "service-worker.js"
-  }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/overlay.js"],
+      "run_at": "document_idle"
+    }
+  ]
 }
